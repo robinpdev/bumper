@@ -13,7 +13,7 @@ namespace bump {
     olc::Sprite* target;
     olc::vi2d pos;
     virtual bool OnUserCreate() = 0;
-    virtual bool OnUserUpdate(float fElapsedTime) = 0;
+    virtual bool OnUserUpdate(float totalTime, float fElapsedTime) = 0;
     virtual ~Module() = default;
   public:
     Module(olc::PixelGameEngine* engine){
@@ -28,10 +28,10 @@ namespace bump {
       return true;
     }
 
-    bool Update(float fElapsedTime){
+    bool Update(float totalTime, float fElapsedTime){
       pge->SetDrawTarget(target);
       
-      bool res = OnUserUpdate(fElapsedTime);
+      bool res = OnUserUpdate(totalTime, fElapsedTime);
       
       pge->SetDrawTarget(nullptr);
       return res;

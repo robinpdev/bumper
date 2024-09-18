@@ -6,7 +6,6 @@
 #include "../olcPixelGameEngine.h"
 
 #include "bump-module.h"
-#include "testmodule.h"
 
 #include <dlfcn.h>
 #include "src/DLLoader/unix/DLLoader.h"
@@ -26,6 +25,7 @@ private:
 	std::string modulepaths[1] = {"./build/modules/testmodule.so"};
 	std::map<std::string, std::shared_ptr<ModuleLoader>> loaders;
 	std::map<std::string, std::shared_ptr<bump::Module>> instances;
+	float totalTime = 0;
 
 	
 public:
@@ -79,9 +79,10 @@ public:
 
 	bool OnUserUpdate(float fElapsedTime) override
 	{
+		totalTime += fElapsedTime;
 		// called once per frame
 		for(auto const& instance : instances){
-			instance.second->Update(fElapsedTime);
+			instance.second->Update(totalTime, fElapsedTime);
 		}
 
 		Clear(olc::BLACK);

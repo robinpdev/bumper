@@ -27,13 +27,20 @@ namespace dlloader
 		{
 		}
 
-		~DLLoader() = default;
+		~DLLoader(){
+			DLCloseLib();
+		};
 
 		void DLOpenLib() override
 		{
 			if (!(_handle = dlopen(_pathToLib.c_str(), RTLD_NOW | RTLD_LAZY))) {
 				std::cerr << dlerror() << std::endl;
 			}
+		}
+
+		void reloadLib() override{
+			DLCloseLib();
+			DLOpenLib();
 		}
 
 		std::shared_ptr<T> DLGetInstance(S input) override
@@ -54,14 +61,15 @@ namespace dlloader
 
 			return std::shared_ptr<T>(
 					allocFunc(input),
-					[deleteFunc](T *p){ deleteFunc(p); });
+					[deleteFunc, this](T *p){ deleteFunc(p); printf("deleted %s at %p\n", _pathToLib.c_str(), p); });
 		}
 
 		void DLCloseLib() override
 		{
-			if (dlclose(_handle) != 0) {
+			if (_handle && dlclose(_handle) != 0) {
 				std::cerr << dlerror() << std::endl;
 			}
+			_handle = 0;
 		}
 
 	};
