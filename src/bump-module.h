@@ -1,8 +1,10 @@
 
+#pragma once
+
 #ifndef BUMP_MODULE_H
 #define BUMP_MODULE_H
 
-#include "olcPixelGameEngine.h"
+#include "../olcPixelGameEngine.h"
 
 namespace bump {
   class Module{
@@ -12,24 +14,26 @@ namespace bump {
     olc::vi2d pos;
     virtual bool OnUserCreate() = 0;
     virtual bool OnUserUpdate(float fElapsedTime) = 0;
+    virtual ~Module() = default;
   public:
     Module(olc::PixelGameEngine* engine){
       pge = engine;
       target = nullptr;
       pos = {0, 0};
+      printf("module engine: %p\n", pge);
     }
 
     bool Create(int width, int height){
-      target = new olc::Sprite(width, height);
-      return OnUserCreate();
+      //target = new olc::Sprite(width, height);
+      return true;
     }
 
     bool Update(float fElapsedTime){
-      pge->SetDrawTarget(target);
+      //pge->SetDrawTarget(target);
       
       bool res = OnUserUpdate(fElapsedTime);
       
-      pge->SetDrawTarget(nullptr);
+      //pge->SetDrawTarget(nullptr);
       
 
       return res;

@@ -1,3 +1,5 @@
+#pragma once
+
 #include "bump-module.h"
 
 class testModule : public bump::Module{

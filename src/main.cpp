@@ -1,4 +1,4 @@
-
+#pragma once
 #define PGE_GFX_OPENGL33
 #define OLC_PGEX_DEAR_IMGUI_IMPLEMENTATION
 #include "../extensions/imgui_impl_pge.h"
@@ -9,8 +9,15 @@
 #include "bump-module.h"
 #include "testmodule.h"
 
+#include <dlfcn.h>
+
+
 #define INSTANCE_DEFAULT_WIDTH 256
 #define INSTANCE_DEFAULT_HEIGHT 240
+
+void * library_handle = 0;
+bump::Module* (* makeinst)(olc::PixelGameEngine*);
+std::shared_ptr<bump::Module> moduleinst;
 
 class Bumper : public olc::PixelGameEngine
 {
@@ -19,6 +26,8 @@ private:
 	int m_GameLayer;
 
 	std::vector<testModule> instances;
+
+	
 public:
 	Bumper() : pge_imgui(false)
 	{
@@ -40,28 +49,71 @@ public:
 		SetLayerCustomRenderFunction(0, std::bind(&Bumper::DrawUI, this));
 
 		// Called once at the start, so create things here
-		testModule testinst = testModule(this);
+		/*testModule testinst = testModule(this);
 		instances.push_back(testinst);
 		for(testModule& instance : instances){
 			instance.Create(INSTANCE_DEFAULT_WIDTH, INSTANCE_DEFAULT_HEIGHT);
+		}*/
+
+		std::string path = "./build/modules/testmodule.so";
+
+		if(library_handle){
+			dlclose(library_handle);
+			if(dlerror() != NULL){
+				fprintf(stderr, "Error unloading library: %s\n", dlerror());
+				exit(1);
+			}
+			library_handle = 0;
+			makeinst = 0;
+			printf("Library unloaded\n");
 		}
+
+		library_handle = dlopen(path.c_str(), RTLD_NOW | RTLD_LAZY);
+		if (!library_handle){
+			fprintf(stderr, "Error loading library: %s\n", dlerror());
+			exit(1);
+		}
+		printf("Library loaded\n");
+		using allocClass = bump::Module *(*)(olc::PixelGameEngine*);
+		using deleteClass = void (*)(bump::Module *);
+
+		auto allocator = reinterpret_cast<allocClass>(dlsym(library_handle, "allocator"));
+		auto deleter = reinterpret_cast<deleteClass>(dlsym(library_handle, "deleter"));
+		if (!allocator || !deleter){
+			fprintf(stderr, "Error loading symbol: %s\n", dlerror());
+			exit(1);
+		}
+		printf("%p\n", (void*)makeinst);
+
+		olc::PixelGameEngine* engine = this;
+      	printf("main engine: %p\n", engine);
+
+		moduleinst = std::shared_ptr<bump::Module>(allocator(engine), [deleter](bump::Module* p){deleter(p);});
+		printf("made module instance\n");
+		moduleinst->Create(INSTANCE_DEFAULT_WIDTH, INSTANCE_DEFAULT_HEIGHT);
+		printf("created buffer\n");
+
 
 		return true;
 	}
 
 	bool OnUserUpdate(float fElapsedTime) override
 	{
+		printf("update\n");
 		// called once per frame
-		for(testModule& instance : instances){
+		/*for(testModule& instance : instances){
 			instance.Update(fElapsedTime);
-		}
+		}*/
+		//moduleinst->Update(fElapsedTime);
 
 		Clear(olc::BLACK);
 		SetDrawTarget((uint8_t)m_GameLayer);
 
-		for(testModule& instance : instances){
+		/*for(testModule& instance : instances){
 			instance.draw();
-		}
+		}*/
+		moduleinst->Update(fElapsedTime);
+		printf("draw done\n");
 
 		ImGui::ShowDemoWindow();
 		

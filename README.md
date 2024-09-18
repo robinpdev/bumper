@@ -13,3 +13,7 @@ roadmap:
 - Effects
 - Bindings
 - ...
+
+# dependencies for building
+
+- sudo apt install build-essential libglu1-mesa-dev libpng-dev
