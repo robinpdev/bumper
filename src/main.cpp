@@ -9,6 +9,7 @@
 #include "testmodule.h"
 
 #include <dlfcn.h>
+#include "src/DLLoader/unix/DLLoader.h"
 
 
 #define INSTANCE_DEFAULT_WIDTH 256
@@ -23,12 +24,13 @@ class Bumper : public olc::PixelGameEngine
 private:
 	olc::imgui::PGE_ImGUI pge_imgui;
 	int m_GameLayer;
+	dlloader::DLLoader<bump::Module, olc::PixelGameEngine*> moduleloader;
 
 	std::vector<testModule> instances;
 
 	
 public:
-	Bumper() : pge_imgui(false)
+	Bumper() : pge_imgui(false), moduleloader("./build/modules/testmodule.so")
 	{
 		sAppName = "Bumper Compositor";
 		
@@ -55,8 +57,10 @@ public:
 		}*/
 
 		std::string path = "./build/modules/testmodule.so";
+		olc::PixelGameEngine* engine = this;
+      	printf("main engine: %p\n", engine);
 
-		if(library_handle){
+		/*if(library_handle){
 			dlclose(library_handle);
 			if(dlerror() != NULL){
 				fprintf(stderr, "Error unloading library: %s\n", dlerror());
@@ -84,10 +88,13 @@ public:
 		}
 		printf("%p\n", (void*)makeinst);
 
-		olc::PixelGameEngine* engine = this;
-      	printf("main engine: %p\n", engine);
 
-		moduleinst = std::shared_ptr<bump::Module>(allocator(engine), [deleter](bump::Module* p){deleter(p);});
+		moduleinst = std::shared_ptr<bump::Module>(allocator(engine), [deleter](bump::Module* p){deleter(p);});*/
+
+		moduleloader.DLOpenLib();
+
+		moduleinst = moduleloader.DLGetInstance(engine);
+
 		printf("made module instance\n");
 		moduleinst->Create(INSTANCE_DEFAULT_WIDTH, INSTANCE_DEFAULT_HEIGHT);
 		printf("created buffer\n");
