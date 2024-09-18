@@ -15,25 +15,31 @@
 #define INSTANCE_DEFAULT_WIDTH 256
 #define INSTANCE_DEFAULT_HEIGHT 240
 
-void * library_handle = 0;
-bump::Module* (* makeinst)(olc::PixelGameEngine*);
-std::shared_ptr<bump::Module> moduleinst;
+using ModuleLoader = dlloader::DLLoader<bump::Module, olc::PixelGameEngine*>;
 
 class Bumper : public olc::PixelGameEngine
 {
 private:
 	olc::imgui::PGE_ImGUI pge_imgui;
 	int m_GameLayer;
-	dlloader::DLLoader<bump::Module, olc::PixelGameEngine*> moduleloader;
 
-	std::vector<testModule> instances;
+	std::string modulepaths[1] = {"./build/modules/testmodule.so"};
+	std::map<std::string, std::shared_ptr<ModuleLoader>> loaders;
+	std::map<std::string, std::shared_ptr<bump::Module>> instances;
 
 	
 public:
-	Bumper() : pge_imgui(false), moduleloader("./build/modules/testmodule.so")
+	Bumper() : pge_imgui(false)
 	{
 		sAppName = "Bumper Compositor";
-		
+	}
+
+	~Bumper(){
+		instances.clear();
+
+		for(auto const& loader : loaders){
+			loader.second->DLCloseLib();
+		}
 	}
 
 public:
@@ -49,55 +55,23 @@ public:
 		//If the pge_imgui was constructed with _register_handler = true, this line is not needed
 		SetLayerCustomRenderFunction(0, std::bind(&Bumper::DrawUI, this));
 
-		// Called once at the start, so create things here
-		/*testModule testinst = testModule(this);
-		instances.push_back(testinst);
-		for(testModule& instance : instances){
-			instance.Create(INSTANCE_DEFAULT_WIDTH, INSTANCE_DEFAULT_HEIGHT);
-		}*/
-
-		std::string path = "./build/modules/testmodule.so";
 		olc::PixelGameEngine* engine = this;
       	printf("main engine: %p\n", engine);
 
-		/*if(library_handle){
-			dlclose(library_handle);
-			if(dlerror() != NULL){
-				fprintf(stderr, "Error unloading library: %s\n", dlerror());
-				exit(1);
-			}
-			library_handle = 0;
-			makeinst = 0;
-			printf("Library unloaded\n");
+		for(std::string path : modulepaths){
+			std::cout << path << std::endl;
+			std::shared_ptr<ModuleLoader> loader(new ModuleLoader(path));
+			loader->DLOpenLib();
+			loaders[path] = loader;
 		}
 
-		library_handle = dlopen(path.c_str(), RTLD_NOW | RTLD_LAZY);
-		if (!library_handle){
-			fprintf(stderr, "Error loading library: %s\n", dlerror());
-			exit(1);
+		for(std::string path : modulepaths){
+			instances[path] = loaders[path]->DLGetInstance(engine);
 		}
-		printf("Library loaded\n");
-		using allocClass = bump::Module *(*)(olc::PixelGameEngine*);
-		using deleteClass = void (*)(bump::Module *);
 
-		auto allocator = reinterpret_cast<allocClass>(dlsym(library_handle, "allocator"));
-		auto deleter = reinterpret_cast<deleteClass>(dlsym(library_handle, "deleter"));
-		if (!allocator || !deleter){
-			fprintf(stderr, "Error loading symbol: %s\n", dlerror());
-			exit(1);
+		for(auto const& instance : instances){
+			instance.second->Create(INSTANCE_DEFAULT_WIDTH, INSTANCE_DEFAULT_HEIGHT);
 		}
-		printf("%p\n", (void*)makeinst);
-
-
-		moduleinst = std::shared_ptr<bump::Module>(allocator(engine), [deleter](bump::Module* p){deleter(p);});*/
-
-		moduleloader.DLOpenLib();
-
-		moduleinst = moduleloader.DLGetInstance(engine);
-
-		printf("made module instance\n");
-		moduleinst->Create(INSTANCE_DEFAULT_WIDTH, INSTANCE_DEFAULT_HEIGHT);
-		printf("created buffer\n");
 
 
 		return true;
@@ -106,18 +80,16 @@ public:
 	bool OnUserUpdate(float fElapsedTime) override
 	{
 		// called once per frame
-		/*for(testModule& instance : instances){
-			instance.Update(fElapsedTime);
-		}*/
-		moduleinst->Update(fElapsedTime);
+		for(auto const& instance : instances){
+			instance.second->Update(fElapsedTime);
+		}
 
 		Clear(olc::BLACK);
 		SetDrawTarget((uint8_t)m_GameLayer);
 
-		/*for(testModule& instance : instances){
-			instance.draw();
-		}*/
-		moduleinst->draw();
+		for(auto const& instance : instances){
+			instance.second->draw();
+		}
 
 		ImGui::ShowDemoWindow();
 		

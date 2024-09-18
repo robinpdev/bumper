@@ -48,8 +48,8 @@ namespace dlloader
 					dlsym(_handle, _deleteClassSymbol.c_str()));
 
 			if (!allocFunc || !deleteFunc) {
-				DLCloseLib();
 				std::cerr << dlerror() << std::endl;
+				DLCloseLib();
 			}
 
 			return std::shared_ptr<T>(
