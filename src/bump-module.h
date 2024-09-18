@@ -24,23 +24,21 @@ namespace bump {
     }
 
     bool Create(int width, int height){
-      //target = new olc::Sprite(width, height);
+      target = new olc::Sprite(width, height);
       return true;
     }
 
     bool Update(float fElapsedTime){
-      //pge->SetDrawTarget(target);
+      pge->SetDrawTarget(target);
       
       bool res = OnUserUpdate(fElapsedTime);
       
-      //pge->SetDrawTarget(nullptr);
-      
-
+      pge->SetDrawTarget(nullptr);
       return res;
     }
 
     void draw(){
-      pge->Clear(olc::BLACK);
+      //pge->Clear(olc::BLACK);
       
       pge->DrawSprite(pos.x, pos.y, target);
     }

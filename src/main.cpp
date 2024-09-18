@@ -1,4 +1,3 @@
-#pragma once
 #define PGE_GFX_OPENGL33
 #define OLC_PGEX_DEAR_IMGUI_IMPLEMENTATION
 #include "../extensions/imgui_impl_pge.h"
@@ -99,12 +98,11 @@ public:
 
 	bool OnUserUpdate(float fElapsedTime) override
 	{
-		printf("update\n");
 		// called once per frame
 		/*for(testModule& instance : instances){
 			instance.Update(fElapsedTime);
 		}*/
-		//moduleinst->Update(fElapsedTime);
+		moduleinst->Update(fElapsedTime);
 
 		Clear(olc::BLACK);
 		SetDrawTarget((uint8_t)m_GameLayer);
@@ -112,8 +110,7 @@ public:
 		/*for(testModule& instance : instances){
 			instance.draw();
 		}*/
-		moduleinst->Update(fElapsedTime);
-		printf("draw done\n");
+		moduleinst->draw();
 
 		ImGui::ShowDemoWindow();
 		

@@ -10,9 +10,7 @@ protected:
   }
 
   bool OnUserUpdate(float fElapsedTime) override{
-    printf("going to draw\n");
     pge->FillRect(0, 0, 100, 150, olc::GREEN);
-    printf("drewn\n");
     return true;
   }
 public:
