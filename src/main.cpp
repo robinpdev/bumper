@@ -22,7 +22,8 @@ private:
 	olc::imgui::PGE_ImGUI pge_imgui;
 	int m_GameLayer;
 
-	std::string modulepaths[1] = {"./build/modules/testmodule.so"};
+	const std::string modulepaths[1] = {"./build/modules/testmodule.so"};
+	const std::string compileCommand = "bash ./makemodules.sh";
 	std::map<std::string, std::shared_ptr<ModuleLoader>> loaders;
 	std::map<std::string, std::shared_ptr<bump::Module>> instances;
 	float totalTime = 0;
@@ -61,25 +62,43 @@ public:
 		for(std::string path : modulepaths){
 			std::cout << path << std::endl;
 			std::shared_ptr<ModuleLoader> loader(new ModuleLoader(path));
-			loader->DLOpenLib();
+			//loader->DLOpenLib();
 			loaders[path] = loader;
 		}
 
+		reloadModules();
+		
+		return true;
+	}
+
+	void reloadModules(){
+		instances.clear();
 		for(std::string path : modulepaths){
-			instances[path] = loaders[path]->DLGetInstance(engine);
+			loaders[path]->reloadLib();
+		}
+
+		for(std::string path : modulepaths){
+			instances[path] = loaders[path]->DLGetInstance(this);
 		}
 
 		for(auto const& instance : instances){
 			instance.second->Create(INSTANCE_DEFAULT_WIDTH, INSTANCE_DEFAULT_HEIGHT);
 		}
-
-
-		return true;
 	}
 
 	bool OnUserUpdate(float fElapsedTime) override
 	{
 		totalTime += fElapsedTime;
+
+		if(GetKey(olc::R).bPressed){
+			reloadModules();
+		}else if(GetKey(olc::T).bPressed){
+			printf("compiling...\n");
+			int exitcode = system(compileCommand.c_str());
+			if(exitcode != 0) printf("compiling failed!\n");
+			reloadModules();
+		}
+
 		// called once per frame
 		for(auto const& instance : instances){
 			instance.second->Update(totalTime, fElapsedTime);
@@ -92,7 +111,13 @@ public:
 			instance.second->draw();
 		}
 
+		//-----------IMGUI-------------//
+
 		ImGui::ShowDemoWindow();
+
+		ImGui::Begin("Demo window");
+		ImGui::Button("Hello!");
+		ImGui::End();
 		
 		return true;
 	}
