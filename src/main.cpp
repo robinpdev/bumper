@@ -28,6 +28,8 @@ private:
 	std::map<std::string, std::shared_ptr<bump::Module>> instances;
 	float totalTime = 0;
 
+	ImVec2 windowpos = ImVec2(0,0);
+
 	
 public:
 	Bumper() : pge_imgui(false)
@@ -83,11 +85,17 @@ public:
 
 		for(auto const& instance : instances){
 			instance.second->Create(INSTANCE_DEFAULT_WIDTH, INSTANCE_DEFAULT_HEIGHT);
+			windowpos.x = instance.second->pos.x;
+			windowpos.y = instance.second->pos.y;
 		}
+
 	}
 
+
+	bool ptrue = true;
 	bool OnUserUpdate(float fElapsedTime) override
 	{
+		
 		totalTime += fElapsedTime;
 
 		if(GetKey(olc::R).bPressed){
@@ -104,8 +112,8 @@ public:
 			instance.second->Update(totalTime, fElapsedTime);
 		}
 
-		Clear(olc::BLACK);
 		SetDrawTarget((uint8_t)m_GameLayer);
+		Clear(olc::BLACK);
 
 		for(auto const& instance : instances){
 			instance.second->draw();
@@ -115,9 +123,22 @@ public:
 
 		ImGui::ShowDemoWindow();
 
-		ImGui::Begin("Demo window");
-		ImGui::Button("Hello!");
-		ImGui::End();
+		for(auto const& instance : instances){
+			bump::Module& inst = *instance.second;
+			ImGui::SetNextWindowPos(ImVec2(inst.pos.x, inst.pos.y), ImGuiCond_FirstUseEver);
+			ImGui::SetNextWindowSize(ImVec2(inst.size.x, inst.size.y), ImGuiCond_FirstUseEver);
+			ImGui::Begin(instance.first.c_str(), &ptrue, ImGuiWindowFlags_NoBackground);
+
+			ImVec2 vMin = ImGui::GetWindowContentRegionMin();
+			ImVec2 vMax = ImGui::GetWindowContentRegionMax();
+			ImVec2 windowpos = ImGui::GetWindowPos();
+			ImVec2 windowsize = ImGui::GetWindowSize();
+			ImGui::End();
+
+			inst.pos.x = windowpos.x + vMin.x - 8;
+			inst.pos.y = windowpos.y + vMin.y - 8;
+			inst.setSize(windowsize.x, windowsize.y - vMin.y + 8);
+		}
 		
 		return true;
 	}

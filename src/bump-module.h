@@ -8,10 +8,12 @@
 
 namespace bump {
   class Module{
+  public:
+    olc::vi2d pos;
+    olc::vi2d size;
   protected:
     olc::PixelGameEngine* pge;
-    olc::Sprite* target;
-    olc::vi2d pos;
+    olc::Sprite* target = 0;
     virtual bool OnUserCreate() = 0;
     virtual bool OnUserUpdate(float totalTime, float fElapsedTime) = 0;
     virtual ~Module() = default;
@@ -24,8 +26,20 @@ namespace bump {
     }
 
     bool Create(int width, int height){
+      if(target) delete target;
       target = new olc::Sprite(width, height);
+      size = {width, height};
       return true;
+    }
+
+    bool setSize(int width, int height){
+      olc::vi2d newsize = {width, height};
+      if(newsize != size){
+        //printf("resizing...\n");
+        Create(newsize.x, newsize.y);
+        return true;
+      }
+      return false;
     }
 
     bool Update(float totalTime, float fElapsedTime){
