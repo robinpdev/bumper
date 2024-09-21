@@ -8,3 +8,9 @@
 bumperapp
 imgui.ini
 build
+obj
+pge.html
+pge.js
+pge.wasm
+pge.data
+editor

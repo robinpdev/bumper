@@ -1,9 +1,12 @@
 #define PGE_GFX_OPENGL33
+
 #define OLC_PGEX_DEAR_IMGUI_IMPLEMENTATION
 #include "../extensions/imgui_impl_pge.h"
 
+#define PGE_GFX_OPENGL33
 #define OLC_PGE_APPLICATION
 #include "../olcPixelGameEngine.h"
+
 
 #include "bump-module.h"
 
@@ -22,8 +25,14 @@ private:
 	olc::imgui::PGE_ImGUI pge_imgui;
 	int m_GameLayer;
 
-	const std::string modulepaths[1] = {"./build/modules/testmodule.so"};
+	#ifdef __EMSCRIPTEN__
+		const std::string modulepaths[1] = {"./build/modules/testmodule.wasm"};
+	#else
+		const std::string modulepaths[1] = {"./build/modules/testmodule.so"};
+	#endif
+
 	const std::string compileCommand = "bash ./makemodules.sh";
+
 	std::map<std::string, std::shared_ptr<ModuleLoader>> loaders;
 	std::map<std::string, std::shared_ptr<bump::Module>> instances;
 	float totalTime = 0;
@@ -34,7 +43,7 @@ private:
 public:
 	Bumper() : pge_imgui(false)
 	{
-		sAppName = "Bumper Compositor";
+		sAppName = "Bumper Compositor wha";
 	}
 
 	~Bumper(){
