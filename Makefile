@@ -12,7 +12,7 @@ LIBS=-lm
 _DEPS = src/bump-module.h
 DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))
 
-_SRCOBJ = main.o 
+_SRCOBJ = main.o engine.o
 SRCOBJ = $(patsubst %,$(ODIR)/%,$(_SRCOBJ))
 
 _IMGUIOBJ = imgui.o imgui_draw.o imgui_tables.o imgui_widgets.o imgui_demo.o imgui_impl_opengl2.o imgui_impl_opengl3.o
@@ -27,10 +27,6 @@ $(ODIR)/%.o: $(IMGUIDIR)/%.cpp
 $(ODIR)/%.o: $(IMGUIDIR)/backends/%.cpp
 	$(CC) -c -o $@ $< $(CFLAGS)
 
-.PHONY: clean
-
-clean:
-	rm -f $(ODIR)/*.o *~ core $(INCDIR)/*~ 
 
 editor: $(SRCOBJ) $(IMGUIOBJ)
 	$(CC) -o $@ $^ $(CFLAGS) \
@@ -58,6 +54,7 @@ module:
 wasmain:
 	em++ -std=c++17 -O2 -s ALLOW_MEMORY_GROWTH=1 -s MAX_WEBGL_VERSION=2 -s MIN_WEBGL_VERSION=2 -s USE_LIBPNG=1 \
 	src/main.cpp  \
+	src/engine.cpp  \
 	libraries/imgui/imgui.cpp \
 	libraries/imgui/imgui_draw.cpp \
 	libraries/imgui/imgui_widgets.cpp \

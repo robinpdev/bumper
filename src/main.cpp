@@ -1,10 +1,7 @@
-#define PGE_GFX_OPENGL33
 
-#define OLC_PGEX_DEAR_IMGUI_IMPLEMENTATION
 #include "../extensions/imgui_impl_pge.h"
 
-#define PGE_GFX_OPENGL33
-#define OLC_PGE_APPLICATION
+
 #include "../olcPixelGameEngine.h"
 
 
@@ -37,13 +34,16 @@ private:
 	std::map<std::string, std::shared_ptr<bump::Module>> instances;
 	float totalTime = 0;
 
+	olc::vi2d imguivp = {0, 0};
+	olc::vi2d pgevp = {0, 0};
+
 	ImVec2 windowpos = ImVec2(0,0);
 
 	
 public:
 	Bumper() : pge_imgui(false)
 	{
-		sAppName = "Bumper Compositor wha";
+		sAppName = "Bumper Compositor but how fast";
 	}
 
 	~Bumper(){
@@ -78,7 +78,13 @@ public:
 		}
 
 		reloadModules();
+
+		pgevp = GetWindowSize();
+
 		
+
+		//imguivp = pgevp;
+
 		return true;
 	}
 
@@ -100,11 +106,14 @@ public:
 
 	}
 
+	int map(int x, int in_min, int in_max, int out_min, int out_max) {
+		return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+	}
+
 
 	bool ptrue = true;
 	bool OnUserUpdate(float fElapsedTime) override
 	{
-		
 		totalTime += fElapsedTime;
 
 		if(GetKey(olc::R).bPressed){
@@ -132,6 +141,10 @@ public:
 
 		ImGui::ShowDemoWindow();
 
+		ImGuiViewport* vp = ImGui::GetMainViewport();
+		imguivp.x =  vp->WorkSize.x;
+		imguivp.y =  vp->WorkSize.y;
+
 		for(auto const& instance : instances){
 			bump::Module& inst = *instance.second;
 			ImGui::SetNextWindowPos(ImVec2(inst.pos.x, inst.pos.y), ImGuiCond_FirstUseEver);
@@ -144,9 +157,10 @@ public:
 			ImVec2 windowsize = ImGui::GetWindowSize();
 			ImGui::End();
 
-			inst.pos.x = windowpos.x + vMin.x - 8;
-			inst.pos.y = windowpos.y + vMin.y - 8;
-			inst.setSize(windowsize.x, windowsize.y - vMin.y + 8);
+
+			inst.pos.x = map(windowpos.x + vMin.x - 8, 0, imguivp.x, 0, pgevp.x);
+			inst.pos.y = map(windowpos.y + vMin.y - 8, 0, imguivp.y, 0, pgevp.y);
+			inst.setSize(map(windowsize.x, 0, imguivp.x, 0, pgevp.x), map(windowsize.y - vMin.y + 8, 0, pgevp.y, 0, pgevp.y));
 		}
 		
 		return true;
