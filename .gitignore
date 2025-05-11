@@ -14,3 +14,4 @@ pge.js
 pge.wasm
 pge.data
 editor
+*.app
