@@ -2,7 +2,7 @@ IDIR =.
 CC=g++
 CFLAGS=-I$(IDIR) -I. -I./libraries/imgui
 
-ODIR=obj
+ODIR=build/obj
 SRCDIR=src
 IMGUIDIR=libraries/imgui
 LDIR =../lib
@@ -19,7 +19,7 @@ _IMGUIOBJ = imgui.o imgui_draw.o imgui_tables.o imgui_widgets.o imgui_demo.o img
 IMGUIOBJ = $(patsubst %,$(ODIR)/%,$(_IMGUIOBJ))
 
 $(ODIR)/%.o: $(SRCDIR)/%.cpp $(DEPS)
-	$(CC) -c -o $@ $< $(CFLAGS) -lGL
+	$(CC) -c -o $@ $< $(CFLAGS)
 
 $(ODIR)/%.o: $(IMGUIDIR)/%.cpp
 	$(CC) -c -o $@ $< $(CFLAGS)

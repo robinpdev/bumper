@@ -303,7 +303,6 @@ namespace olc
 #include "imgui_impl_opengl3.h"
 #else
 #include "../libraries/imgui/backends/imgui_impl_opengl2.h"
-#include <gl/GL.h>
 #endif
 
 namespace olc
