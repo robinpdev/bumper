@@ -50,9 +50,9 @@ Versions:
 	  to be called by the application.
 		ImGui::CreateContext
 		ImGui::NewFrame
-		ImGui_ImplOpenGL2_Init
-		ImGui_ImplOpenGL2_NewFrame
-		ImGui_ImplOpenGL2_RenderDrawData
+		ImGui_ImplGLUT_Init
+		ImGui_ImplGLUT_NewFrame
+		ImGui_ImplGLUT_RenderDrawData
 		ImGui_ImplOpenGL3_Init
 		ImGui_ImplOpenGL3_NewFrame
 		ImGui_ImplOpenGL3_RenderDrawData
@@ -138,11 +138,11 @@ imgui_draw.cpp
 imgui_widgets.cpp
 Imgui_tables.cpp
 
-Additionally required are either the opengl2 or opengl3 files, depending
+Additionally required are either the GLUT or opengl3 files, depending
 on the choice of renderer
 
-imgui_impl_opengl2.cpp
-imgui_impl_opengl2.h
+imgui_impl_GLUT.cpp
+imgui_impl_GLUT.h
 
 imgui_impl_opengl3.cpp
 imgui_impl_opengl3.h
@@ -271,7 +271,7 @@ namespace olc
 			//A group of PGEX functions which will be automatically run by PGE at specific times
 			void OnBeforeUserCreate() override;
 			void OnAfterUserCreate() override;
-			bool OnBeforeUserUpdate(float& fElapsedTime) override;
+			void OnBeforeUserUpdate(float& fElapsedTime) override;
 			void OnAfterUserUpdate(float fElapsedTime) override;
 
 		private:
@@ -290,6 +290,7 @@ namespace olc
 
 			//Internal function to update Dear ImGui with the current state of the keyboard
 			void ImGui_ImplPGE_UpdateKeys(void);
+			bool init = false;
 		};
 
 		// Allow Dear ImGui to change the blend mode
@@ -300,8 +301,10 @@ namespace olc
 
 #ifdef OLC_PGEX_DEAR_IMGUI_IMPLEMENTATION
 #ifdef OLC_GFX_OPENGL33
+#include "../libraries/imgui/backends/imgui_impl_glut.h"
 #include "imgui_impl_opengl3.h"
 #else
+#include "../libraries/imgui/backends/imgui_impl_glut.h"
 #include "../libraries/imgui/backends/imgui_impl_opengl2.h"
 #endif
 
@@ -317,8 +320,11 @@ namespace olc
 			ImGui::CreateContext();
 
 #ifdef OLC_GFX_OPENGL33
-			ImGui_ImplOpenGL3_Init();
+			ImGui_ImplOpenGL2_Init();
+			//ImGui_ImplOpenGL3_Init();
+
 #else
+			//ImGui_ImplGLUT_Init();
 			ImGui_ImplOpenGL2_Init();
 #endif
 			ImGuiIO& io = ImGui::GetIO();
@@ -471,14 +477,16 @@ namespace olc
 		}
 
 		void PGE_ImGUI::ImGui_ImplPGE_NewFrame(void) {
+
 #ifdef OLC_GFX_OPENGL33
 			ImGui_ImplOpenGL3_NewFrame();
 #else
+			//ImGui_ImplGLUT_NewFrame();
 			ImGui_ImplOpenGL2_NewFrame();
 #endif
 			ImGuiIO& io = ImGui::GetIO();
 			olc::vi2d windowSize = pge->GetWindowSize();
-			IM_ASSERT(io.Fonts->IsBuilt() && "Font atlas not built! It is generally built by the renderer back-end. Missing call to renderer _NewFrame() function? e.g. ImGui_ImplOpenGL2_NewFrame().");
+			IM_ASSERT(io.Fonts->IsBuilt() && "Font atlas not built! It is generally built by the renderer back-end. Missing call to renderer _NewFrame() function? e.g. ImGui_ImplGLUT_NewFrame().");
 
 			io.DisplaySize = ImVec2((float)windowSize.x, (float)windowSize.y);
 
@@ -515,14 +523,23 @@ namespace olc
 		//After the OnUserCreate function runs, we will run all of the Init code to setup
 		//the ImGui.  This will happen automatically in PGE 2.10+
 		void PGE_ImGUI::OnAfterUserCreate() {
-			ImGui_ImplPGE_Init();
+			/*if(!init){
+				init = true;
+				ImGui_ImplPGE_Init();
+			}*/
 		}
 
 		//Before the OnUserUpdate runs, do the pre-frame ImGui intialization
-		bool PGE_ImGUI::OnBeforeUserUpdate(float& fElapsedTime) {
+		void PGE_ImGUI::OnBeforeUserUpdate(float& fElapsedTime) {
+
+			if(!init){
+				init = true;
+				ImGui_ImplPGE_Init();
+			}
+
 			ImGui_ImplPGE_NewFrame();
 			ImGui::NewFrame();
-			return false;
+			return;
 		}
 
 		//There is currently no "after update" logic to run for ImGui

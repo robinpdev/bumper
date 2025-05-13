@@ -1,1 +1,1 @@
-make module
+make macmodule

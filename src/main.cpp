@@ -1,5 +1,5 @@
 
-#define PGE_GFX_OPENGL33
+//#define PGE_GFX_OPENGL33
 
 
 
@@ -31,6 +31,7 @@ private:
 		const std::string modulepaths[1] = {"./build/modules/testmodule.wasm"};
 	#else
 		const std::string modulepaths[1] = {"./build/modules/testmodule.so"};
+		//const std::string modulepaths[0] = {};
 	#endif
 
 	const std::string compileCommand = "bash ./makemodules.sh";

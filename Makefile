@@ -27,11 +27,39 @@ $(ODIR)/%.o: $(IMGUIDIR)/%.cpp
 $(ODIR)/%.o: $(IMGUIDIR)/backends/%.cpp
 	$(CC) -c -o $@ $< $(CFLAGS)
 
+
+LIBRARIES = -framework OpenGL -framework GLUT -framework Carbon -lpng
+
+EXE = output
+#for apple silicon change the -arch value to arm64
+macbumped:
+	clang++ -arch x86_64 -std=c++17 -mmacosx-version-min=10.15 -Wall $(LIBRARIES) \
+		src/main.cpp \
+		libraries/imgui/imgui.cpp \
+		libraries/imgui/imgui_draw.cpp \
+		libraries/imgui/imgui_widgets.cpp \
+		libraries/imgui/imgui_tables.cpp \
+		libraries/imgui/imgui_demo.cpp \
+		libraries/imgui/backends/imgui_impl_glut.cpp \
+		libraries/imgui/backends/imgui_impl_opengl2.cpp \
+		-I $(shell pwd)/libraries/imgui \
+		-I $(shell pwd) \
+		-rdynamic -g3 -Wl,-undefined,dynamic_lookup \
+		-o $(EXE)
+clean:
+	-rm $(EXE)
+
+macmodule:
+	clang++ -mmacosx-version-min=10.15 -Wall -o build/modules/testmodule.so src/modules/testmodule.cpp -g3\
+		-fPIC -shared -rdynamic -Wl,-undefined,dynamic_lookup -std=c++17 \
+		-I $(shell pwd)
+
 # bumper editor
 bumped: $(SRCOBJ) $(IMGUIOBJ)
 	$(CC) -o $@.app $^ $(CFLAGS) \
 		-lX11 -lGL -lpthread -lpng -lstdc++fs -std=c++17 \
 		-rdynamic -g3
+
 
 # compile the editor from scratch
 slowcompileeditor: $(OBJ)

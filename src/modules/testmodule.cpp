@@ -5,7 +5,7 @@ class testModule : public bump::Module{
 protected:
   olc::vf2d ballpos = {0.0f,0.0f};
   olc::vf2d heading = {90.0f,90.0f};
-  const int radius = 24;
+  const int radius = 44;
 
   bool OnUserCreate() override{
     pos = {0, 0};
